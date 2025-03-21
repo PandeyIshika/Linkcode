@@ -1,116 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple To-Do List</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #c7d0ea;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .todo-container {
-      background: rgb(156, 183, 225);
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 400px;
-      text-align: center;
-    }
-    input[type="text"] {
-      width: 70%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      border: 1px solid #09305e;
-    }
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      background-color: #556dd8;
-      color: white;
-      cursor: pointer;
-      margin-left: 10px;
-    }
-    button:hover {
-      background-color: #7c51b4;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-      margin-top: 20px;
-    }
-    li {
-      background: #8491e8;
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: 0.3s;
-    }
-    li.completed {
-      text-decoration: line-through;
-      color: rgb(132, 132, 215);
-    }
-    .delete-btn {
-      background-color: #4c5ed2;
-      border: none;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .delete-btn:hover {
-      background-color: #6756a8;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f3e8ff;
+            color: #5a3d7e;
+        }
+
+        input {
+            padding: 8px;
+            width: 300px;
+            margin-right: 10px;
+            border: 2px solid #a385c2;
+            border-radius: 5px;
+            background-color: #f8f0ff;
+            color: #5a3d7e;
+        }
+
+        button {
+            padding: 8px 12px;
+            background-color: #b088f9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #9e71d6;
+        }
+
+        .clear-btn {
+            background-color: #d1a3ff;
+        }
+
+        .clear-btn:hover {
+            background-color: #b385d6;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .news-container {
+            background: #e9d6ff;
+            padding: 15px;
+            margin-top: 10px;
+            border-left: 5px solid #c7a8f0;
+            border-radius: 5px;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="todo-container">
-    <h2>To-Do List</h2>
-    <input type="text" id="taskInput" placeholder="Add a new task">
-    <button onclick="addTask()">Add</button>
-    <ul id="taskList"></ul>
-  </div>
 
-  <script>
-    function addTask() {
-      const taskInput = document.getElementById('taskInput');
-      const taskValue = taskInput.value.trim();
+    <input id="input" type="text" placeholder="Enter news topic">
+    <button onclick="getNews()">Generate News</button>
+    <button class="clear-btn" onclick="clearNews()">Clear</button>
 
-      if (taskValue === '') {
-        alert('Please enter a task');
-        return;
-      }
+    <div id="result"></div>
 
-      const li = document.createElement('li');
-      li.textContent = taskValue;
+    <script>
+        const input = document.getElementById("input");
+        const resultDiv = document.getElementById("result");
 
-      // Add click to toggle completed
-      li.addEventListener('click', function () {
-        li.classList.toggle('completed');
-      });
+        async function getNews() {
+            const API_KEY = "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";
+            const endpoint = "https://api.groq.com/openai/v1/chat/completions";
 
-      // Delete button
-      const delBtn = document.createElement('button');
-      delBtn.textContent = 'Delete';
-      delBtn.classList.add('delete-btn');
-      delBtn.onclick = function (e) {
-        e.stopPropagation();
-        li.remove();
-      };
+            if (input.value.trim() === "") {
+                alert("Please enter a topic!");
+                return;
+            }
 
-      li.appendChild(delBtn);
-      document.getElementById('taskList').appendChild(li);
-      taskInput.value = '';
-    }
-  </script>
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            {
+                                role: "user",
+                                content: `Generate news on topic: ${input.value}. Format in a div with CSS (no HTML or body tag).`,
+                            },
+                        ],
+                    }),
+                });
+
+                const body = await response.json();
+                console.log(body);
+
+                if (body.choices && body.choices.length > 0) {
+                    const newDiv = document.createElement("div");
+                    newDiv.classList.add("news-container");
+                    newDiv.innerHTML = body.choices[0].message.content;
+                    resultDiv.appendChild(newDiv);
+                    input.value = ""; // Clear input after fetching news
+                } else {
+                    alert("Failed to fetch news. Try again!");
+                }
+
+            } catch (error) {
+                console.error("Error fetching news:", error);
+                alert("Error fetching news. Check the console for details.");
+            }
+        }
+
+        function clearNews() {
+            input.value = "";
+            resultDiv.innerHTML = "";
+        }
+    </script>
+
 </body>
+
 </html>
